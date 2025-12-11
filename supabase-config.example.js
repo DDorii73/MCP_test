@@ -1,6 +1,6 @@
 // Supabase 설정 예시 파일
-// 이 파일을 복사하여 supabase-config.js로 이름을 변경하고 실제 값을 입력하세요.
-// supabase-config.js는 .gitignore에 추가되어 버전 관리에서 제외됩니다.
+// 이 파일을 복사하여 .config/supabase-config.js로 저장하고 실제 값을 입력하세요.
+// .config 폴더는 .gitignore에 추가되어 버전 관리에서 제외됩니다.
 
 const SUPABASE_URL = 'YOUR_SUPABASE_URL'; // 예: 'https://xxxxxxxxxxxxx.supabase.co'
 const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY'; // 예: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'

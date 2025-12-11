@@ -1,5 +1,11 @@
 # Supabase 설정 파일 (민감한 정보 포함)
 supabase-config.js
+.config/
+.config/*
+!.config/.gitkeep
+
+# 루트 디렉토리의 supabase-config.js도 제외 (혹시 모를 경우 대비)
+/supabase-config.js
 
 # 환경 변수 파일
 .env
