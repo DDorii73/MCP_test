@@ -10,24 +10,33 @@
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>🎮 카드 뒤집기 게임</h1>
-        </header>
-        
-        <div class="game-info">
-            <div class="info-item">
-                <span class="label">🎯 시도 횟수</span>
-                <span id="moves">0</span>
+        <!-- 상단 고정 영역 -->
+        <div class="top-section">
+            <header>
+                <h1>🎮 카드 뒤집기 게임</h1>
+            </header>
+            
+            <div class="game-controls">
+                <button id="new-game-btn" class="btn">🔄 새 게임</button>
+                <button id="leaderboard-btn" class="btn">🏆 리더보드</button>
             </div>
-            <div class="info-item">
-                <span class="label">⏱️ 시간</span>
-                <span id="timer">00:00</span>
+            
+            <div class="game-info">
+                <div class="info-item">
+                    <span class="label">🎯 시도 횟수</span>
+                    <span id="moves">0</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">⏱️ 시간</span>
+                    <span id="timer">00:00</span>
+                </div>
             </div>
-            <button id="new-game-btn" class="btn">🔄 새 게임</button>
-            <button id="leaderboard-btn" class="btn">🏆 리더보드</button>
         </div>
 
-        <div id="game-board" class="game-board"></div>
+        <!-- 게임 보드 영역 (스크롤 가능) -->
+        <div class="game-board-wrapper">
+            <div id="game-board" class="game-board"></div>
+        </div>
 
         <!-- 게임 완료 모달 -->
         <div id="game-complete-modal" class="modal">

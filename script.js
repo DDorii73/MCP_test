@@ -86,10 +86,26 @@ function renderBoard() {
             </div>
         `;
         
-        // 모바일 터치 이벤트 최적화
+        // 모바일 터치 이벤트 최적화 (스크롤과 충돌 방지)
+        let touchStartTime = 0;
+        let touchStartY = 0;
+        
         cardElement.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            handleCardClick(index);
+            touchStartTime = Date.now();
+            touchStartY = e.touches[0].clientY;
+        }, { passive: true });
+        
+        cardElement.addEventListener('touchend', (e) => {
+            const touchEndTime = Date.now();
+            const touchEndY = e.changedTouches[0].clientY;
+            const timeDiff = touchEndTime - touchStartTime;
+            const yDiff = Math.abs(touchEndY - touchStartY);
+            
+            // 빠른 탭이고 수직 이동이 적으면 클릭으로 처리
+            if (timeDiff < 300 && yDiff < 10) {
+                e.preventDefault();
+                handleCardClick(index);
+            }
         }, { passive: false });
         
         cardElement.addEventListener('click', () => handleCardClick(index));
@@ -389,132 +405,5 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // 게임 초기화
     initGame();
-    
-    // 드래그 기능 추가 (모바일 전용)
-    if (window.innerWidth < 768) {
-        initDragContainer();
-    }
-    
-    // 화면 크기 변경 시 드래그 기능 토글
-    window.addEventListener('resize', () => {
-        const container = document.querySelector('.container');
-        if (window.innerWidth < 768 && !container.hasAttribute('data-drag-initialized')) {
-            initDragContainer();
-        } else if (window.innerWidth >= 768) {
-            container.removeAttribute('data-drag-initialized');
-            container.style.transform = 'translateX(-50%)';
-        }
-    });
 });
-
-// 컨테이너 드래그 기능
-function initDragContainer() {
-    const container = document.querySelector('.container');
-    if (container.hasAttribute('data-drag-initialized')) return;
-    
-    container.setAttribute('data-drag-initialized', 'true');
-    
-    let isDragging = false;
-    let startY = 0;
-    let startTranslateY = 0;
-    let currentTranslateY = 0;
-    
-    // 터치 이벤트
-    container.addEventListener('touchstart', handleDragStart, { passive: false });
-    container.addEventListener('touchmove', handleDragMove, { passive: false });
-    container.addEventListener('touchend', handleDragEnd, { passive: false });
-    
-    // 마우스 이벤트 (데스크톱에서도 테스트용)
-    container.addEventListener('mousedown', handleDragStart);
-    document.addEventListener('mousemove', handleDragMove);
-    document.addEventListener('mouseup', handleDragEnd);
-    
-    function handleDragStart(e) {
-        // 헤더나 드래그 핸들 영역에서만 드래그 시작
-        const target = e.target;
-        const header = document.querySelector('header');
-        const isHeaderArea = header && (header.contains(target) || target === header || target === container);
-        
-        if (!isHeaderArea && !target.closest('header')) {
-            return;
-        }
-        
-        isDragging = true;
-        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-        startY = clientY;
-        
-        // 현재 위치 가져오기
-        const rect = container.getBoundingClientRect();
-        const computedStyle = window.getComputedStyle(container);
-        const matrix = new DOMMatrix(computedStyle.transform);
-        startTranslateY = matrix.m42 || 0;
-        
-        container.style.transition = 'none';
-        container.style.cursor = 'grabbing';
-        e.preventDefault();
-    }
-    
-    function handleDragMove(e) {
-        if (!isDragging) return;
-        
-        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-        const deltaY = clientY - startY;
-        currentTranslateY = startTranslateY + deltaY;
-        
-        // 최소/최대 위치 제한
-        const maxTranslateY = 0; // 원래 위치 (하단)
-        const minTranslateY = -(window.innerHeight * 0.7); // 최대 위로 올릴 수 있는 거리
-        
-        currentTranslateY = Math.max(minTranslateY, Math.min(maxTranslateY, currentTranslateY));
-        
-        container.style.transform = `translate(-50%, ${currentTranslateY}px)`;
-        container.style.webkitTransform = `translate(-50%, ${currentTranslateY}px)`;
-        
-        e.preventDefault();
-    }
-    
-    function handleDragEnd(e) {
-        if (!isDragging) return;
-        
-        isDragging = false;
-        container.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
-        container.style.cursor = '';
-        
-        // 스냅 효과: 일정 거리 이상 올라갔으면 위로, 아니면 아래로
-        const threshold = -100;
-        const minTranslateY = -(window.innerHeight * 0.7);
-        
-        if (currentTranslateY < threshold) {
-            // 위로 스냅
-            const snapY = minTranslateY;
-            container.style.transform = `translate(-50%, ${snapY}px)`;
-            container.style.webkitTransform = `translate(-50%, ${snapY}px)`;
-        } else {
-            // 아래로 스냅 (원래 위치)
-            container.style.transform = 'translate(-50%, 0)';
-            container.style.webkitTransform = 'translate(-50%, 0)';
-        }
-        
-        e.preventDefault();
-    }
-    
-    // 스크롤 방지 (드래그 중)
-    let touchStartY = 0;
-    container.addEventListener('touchstart', (e) => {
-        touchStartY = e.touches[0].clientY;
-    }, { passive: true });
-    
-    container.addEventListener('touchmove', (e) => {
-        const touchY = e.touches[0].clientY;
-        const deltaY = touchStartY - touchY;
-        
-        // 헤더 영역에서 드래그할 때만 스크롤 방지
-        const header = document.querySelector('header');
-        const touchTarget = document.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY);
-        
-        if (header && (header.contains(touchTarget) || touchTarget === header)) {
-            e.preventDefault();
-        }
-    }, { passive: false });
-}
 

@@ -13,9 +13,9 @@ body {
     margin: 0;
     position: relative;
     overflow-x: hidden;
-    overflow-y: hidden; /* 스크롤 방지 */
+    overflow-y: hidden;
     -webkit-tap-highlight-color: transparent; /* 터치 하이라이트 제거 */
-    touch-action: pan-y; /* 수직 스크롤만 허용 (드래그용) */
+    touch-action: manipulation; /* 더블탭 줌 방지 */
 }
 
 /* 배경 애니메이션 효과 */
@@ -43,82 +43,90 @@ body::before {
 .container {
     max-width: 650px;
     width: 100%;
+    height: 100vh;
+    height: -webkit-fill-available; /* iOS Safari 대응 */
     background: rgba(255, 255, 255, 0.05);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px); /* Safari 대응 */
-    border-radius: 24px 24px 0 0; /* 상단만 둥글게 */
-    padding: 20px;
-    padding-top: 15px; /* 드래그 핸들 공간 */
+    border-radius: 0;
+    padding: 0;
     box-shadow: 
-        0 -8px 32px rgba(0, 0, 0, 0.3),
+        0 0 32px rgba(0, 0, 0, 0.3),
         0 0 0 1px rgba(255, 255, 255, 0.1),
         inset 0 1px 0 rgba(255, 255, 255, 0.2);
     position: fixed;
-    bottom: 0;
+    top: 0;
     left: 50%;
     transform: translateX(-50%);
     -webkit-transform: translateX(-50%);
     z-index: 100;
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-bottom: none;
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    -webkit-transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    max-height: 95vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* 상단 고정 영역 */
+.top-section {
+    flex-shrink: 0;
+    padding: 20px;
+    padding-top: max(20px, env(safe-area-inset-top));
+    background: rgba(0, 0, 0, 0.2);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* 게임 보드 래퍼 (스크롤 가능) */
+.game-board-wrapper {
+    flex: 1;
     overflow-y: auto;
+    overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
-}
-
-/* 드래그 핸들 */
-.container::before {
-    content: '';
-    position: absolute;
-    top: 8px;
-    left: 50%;
-    transform: translateX(-50%);
-    -webkit-transform: translateX(-50%);
-    width: 40px;
-    height: 4px;
-    background: rgba(255, 255, 255, 0.3);
-    border-radius: 2px;
-    cursor: grab;
-    transition: background 0.2s ease;
-}
-
-.container:active::before {
-    cursor: grabbing;
-    background: rgba(255, 255, 255, 0.5);
+    padding: 20px;
+    padding-bottom: max(20px, env(safe-area-inset-bottom));
 }
 
 /* 데스크톱에서는 중앙 정렬 */
 @media (min-width: 768px) {
     .container {
         position: relative;
-        bottom: auto;
+        top: auto;
         left: auto;
         transform: none;
         -webkit-transform: none;
+        height: auto;
+        min-height: 100vh;
         border-radius: 24px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        margin: auto;
-        max-height: none;
+        margin: 20px auto;
+        max-height: 95vh;
     }
     
-    .container::before {
-        display: none;
+    .top-section {
+        border-radius: 24px 24px 0 0;
+    }
+    
+    .game-board-wrapper {
+        border-radius: 0 0 24px 24px;
     }
 }
 
 header {
     text-align: center;
-    margin-bottom: 30px;
-    cursor: grab;
+    margin-bottom: 20px;
     user-select: none;
     -webkit-user-select: none;
-    padding-top: 10px; /* 드래그 핸들 공간 */
 }
 
-header:active {
-    cursor: grabbing;
+/* 게임 컨트롤 버튼 영역 */
+.game-controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    justify-content: center;
+}
+
+.game-controls .btn {
+    flex: 1;
+    max-width: 200px;
 }
 
 header h1 {
@@ -139,8 +147,7 @@ header h1 {
     align-items: center;
     flex-wrap: wrap;
     gap: 15px;
-    margin-bottom: 30px;
-    padding: 20px;
+    padding: 15px;
     background: rgba(255, 255, 255, 0.08);
     backdrop-filter: blur(5px);
     border-radius: 16px;
@@ -644,13 +651,16 @@ header h1 {
     }
 
     .container {
+        border-radius: 0;
+    }
+
+    .top-section {
         padding: 15px;
-        border-radius: 20px 20px 0 0;
-        max-height: 90vh;
+        padding-top: max(15px, env(safe-area-inset-top));
     }
 
     header {
-        margin-bottom: 20px;
+        margin-bottom: 15px;
     }
 
     header h1 {
@@ -658,12 +668,20 @@ header h1 {
         margin-bottom: 5px;
     }
 
+    .game-controls {
+        margin-bottom: 12px;
+    }
+
+    .game-controls .btn {
+        padding: 10px 15px;
+        font-size: 0.9em;
+    }
+
     .game-info {
         flex-direction: row;
         flex-wrap: wrap;
         padding: 12px;
         gap: 10px;
-        margin-bottom: 20px;
     }
 
     .info-item {
@@ -680,11 +698,9 @@ header h1 {
         font-size: 1.5em;
     }
 
-    .btn {
-        flex: 1;
-        min-width: calc(50% - 5px);
-        padding: 10px 15px;
-        font-size: 0.9em;
+    .game-board-wrapper {
+        padding: 15px;
+        padding-bottom: max(15px, env(safe-area-inset-bottom));
     }
 
     .game-board {
@@ -727,13 +743,18 @@ header h1 {
         padding: 0;
     }
 
-    .container {
+    .top-section {
         padding: 12px;
-        max-height: 85vh;
+        padding-top: max(12px, env(safe-area-inset-top));
     }
 
     header h1 {
         font-size: 1.5em;
+    }
+
+    .game-controls .btn {
+        padding: 8px 12px;
+        font-size: 0.85em;
     }
 
     .game-info {
@@ -746,9 +767,9 @@ header h1 {
         padding: 8px;
     }
 
-    .btn {
-        min-width: 100%;
-        margin-top: 5px;
+    .game-board-wrapper {
+        padding: 12px;
+        padding-bottom: max(12px, env(safe-area-inset-bottom));
     }
 
     .game-board {
@@ -773,13 +794,18 @@ header h1 {
 
 /* 매우 작은 화면 (360px 이하) */
 @media (max-width: 360px) {
-    .container {
+    .top-section {
         padding: 10px;
-        max-height: 80vh;
+        padding-top: max(10px, env(safe-area-inset-top));
     }
 
     header h1 {
         font-size: 1.3em;
+    }
+
+    .game-board-wrapper {
+        padding: 10px;
+        padding-bottom: max(10px, env(safe-area-inset-bottom));
     }
 
     .game-board {
@@ -807,14 +833,13 @@ header h1 {
         padding: 0;
     }
 
-    .container {
-        padding: 10px;
-        max-height: 95vh;
-        overflow-y: auto;
+    .top-section {
+        padding: 8px;
+        padding-top: max(8px, env(safe-area-inset-top));
     }
 
     header {
-        margin-bottom: 10px;
+        margin-bottom: 8px;
     }
 
     header h1 {
@@ -822,9 +847,12 @@ header h1 {
         margin-bottom: 5px;
     }
 
+    .game-controls {
+        margin-bottom: 8px;
+    }
+
     .game-info {
         padding: 8px;
-        margin-bottom: 10px;
         flex-wrap: nowrap;
     }
 
@@ -844,6 +872,11 @@ header h1 {
     .btn {
         padding: 8px 12px;
         font-size: 0.85em;
+    }
+
+    .game-board-wrapper {
+        padding: 8px;
+        padding-bottom: max(8px, env(safe-area-inset-bottom));
     }
 
     .game-board {
