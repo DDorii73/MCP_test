@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>카드 뒤집기 게임</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎮 카드 뒤집기 게임</h1>
+        </header>
+        
+        <div class="game-info">
+            <div class="info-item">
+                <span class="label">🎯 시도 횟수</span>
+                <span id="moves">0</span>
+            </div>
+            <div class="info-item">
+                <span class="label">⏱️ 시간</span>
+                <span id="timer">00:00</span>
+            </div>
+            <button id="new-game-btn" class="btn">🔄 새 게임</button>
+            <button id="leaderboard-btn" class="btn">🏆 리더보드</button>
+        </div>
+
+        <div id="game-board" class="game-board"></div>
+
+        <!-- 게임 완료 모달 -->
+        <div id="game-complete-modal" class="modal">
+            <div class="modal-content">
+                <h2>🎉 게임 완료!</h2>
+                <p>축하합니다! 모든 카드를 매칭했습니다!</p>
+                <div class="stats">
+                    <p>시도 횟수: <span id="final-moves">0</span></p>
+                    <p>소요 시간: <span id="final-time">00:00</span></p>
+                </div>
+                <div class="score-input">
+                    <input type="text" id="player-name" placeholder="이름을 입력하세요 (선택사항)" maxlength="20">
+                    <button id="save-score-btn" class="btn">점수 저장</button>
+                </div>
+                <button id="play-again-btn" class="btn">다시 하기</button>
+            </div>
+        </div>
+
+        <!-- 리더보드 모달 -->
+        <div id="leaderboard-modal" class="modal">
+            <div class="modal-content">
+                <h2>🏆 리더보드</h2>
+                <div id="leaderboard-list" class="leaderboard-list">
+                    <p class="loading">로딩 중...</p>
+                </div>
+                <button id="close-leaderboard-btn" class="btn">닫기</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" onload="console.log('Supabase 라이브러리 로드 완료')"></script>
+    <script src="supabase-config.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
+
