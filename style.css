@@ -9,14 +9,13 @@ body {
     background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
     min-height: 100vh;
     min-height: -webkit-fill-available; /* iOS Safari 대응 */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 10px;
+    padding: 0;
+    margin: 0;
     position: relative;
     overflow-x: hidden;
+    overflow-y: hidden; /* 스크롤 방지 */
     -webkit-tap-highlight-color: transparent; /* 터치 하이라이트 제거 */
-    touch-action: manipulation; /* 더블탭 줌 방지 */
+    touch-action: pan-y; /* 수직 스크롤만 허용 (드래그용) */
 }
 
 /* 배경 애니메이션 효과 */
@@ -47,21 +46,79 @@ body::before {
     background: rgba(255, 255, 255, 0.05);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px); /* Safari 대응 */
-    border-radius: 24px;
+    border-radius: 24px 24px 0 0; /* 상단만 둥글게 */
     padding: 20px;
+    padding-top: 15px; /* 드래그 핸들 공간 */
     box-shadow: 
-        0 8px 32px rgba(0, 0, 0, 0.3),
+        0 -8px 32px rgba(0, 0, 0, 0.3),
         0 0 0 1px rgba(255, 255, 255, 0.1),
         inset 0 1px 0 rgba(255, 255, 255, 0.2);
-    position: relative;
-    z-index: 1;
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    -webkit-transform: translateX(-50%);
+    z-index: 100;
     border: 1px solid rgba(255, 255, 255, 0.1);
-    margin: auto;
+    border-bottom: none;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    -webkit-transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    max-height: 95vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* 드래그 핸들 */
+.container::before {
+    content: '';
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    -webkit-transform: translateX(-50%);
+    width: 40px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+    cursor: grab;
+    transition: background 0.2s ease;
+}
+
+.container:active::before {
+    cursor: grabbing;
+    background: rgba(255, 255, 255, 0.5);
+}
+
+/* 데스크톱에서는 중앙 정렬 */
+@media (min-width: 768px) {
+    .container {
+        position: relative;
+        bottom: auto;
+        left: auto;
+        transform: none;
+        -webkit-transform: none;
+        border-radius: 24px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        margin: auto;
+        max-height: none;
+    }
+    
+    .container::before {
+        display: none;
+    }
 }
 
 header {
     text-align: center;
     margin-bottom: 30px;
+    cursor: grab;
+    user-select: none;
+    -webkit-user-select: none;
+    padding-top: 10px; /* 드래그 핸들 공간 */
+}
+
+header:active {
+    cursor: grabbing;
 }
 
 header h1 {
@@ -580,14 +637,16 @@ header h1 {
 }
 
 /* 반응형 디자인 */
-@media (max-width: 600px) {
+@media (max-width: 767px) {
     body {
-        padding: 5px;
+        padding: 0;
+        overflow-y: hidden;
     }
 
     .container {
         padding: 15px;
-        border-radius: 16px;
+        border-radius: 20px 20px 0 0;
+        max-height: 90vh;
     }
 
     header {
@@ -665,11 +724,12 @@ header h1 {
 /* 작은 모바일 화면 (480px 이하) */
 @media (max-width: 480px) {
     body {
-        padding: 5px;
+        padding: 0;
     }
 
     .container {
         padding: 12px;
+        max-height: 85vh;
     }
 
     header h1 {
@@ -715,6 +775,7 @@ header h1 {
 @media (max-width: 360px) {
     .container {
         padding: 10px;
+        max-height: 80vh;
     }
 
     header h1 {
@@ -743,12 +804,12 @@ header h1 {
 /* 가로 모드 (landscape) 최적화 */
 @media (max-height: 500px) and (orientation: landscape) {
     body {
-        padding: 5px;
+        padding: 0;
     }
 
     .container {
         padding: 10px;
-        max-height: 100vh;
+        max-height: 95vh;
         overflow-y: auto;
     }
 
