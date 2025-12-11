@@ -251,13 +251,29 @@ function ensureSupabaseInit() {
 
 // 점수 저장
 async function saveScore() {
-    const playerName = document.getElementById('player-name').value.trim() || '익명';
+    const saveBtn = document.getElementById('save-score-btn');
+    const playerNameInput = document.getElementById('player-name');
+    const playerName = playerNameInput.value.trim() || '익명';
+    
+    // 게임이 시작되지 않았거나 완료되지 않은 경우
+    if (startTime === null) {
+        alert('게임을 완료한 후 점수를 저장할 수 있습니다.');
+        return;
+    }
+    
     const elapsed = Math.floor((Date.now() - startTime) / 1000);
+    
+    // 버튼 비활성화 및 로딩 표시
+    const originalText = saveBtn.textContent;
+    saveBtn.disabled = true;
+    saveBtn.textContent = '저장 중...';
     
     // Supabase 초기화 확인
     if (!ensureSupabaseInit()) {
         alert('Supabase가 설정되지 않았습니다. 페이지를 새로고침해주세요.');
         console.error('Supabase 클라이언트가 초기화되지 않았습니다.');
+        saveBtn.disabled = false;
+        saveBtn.textContent = originalText;
         return;
     }
     
@@ -265,12 +281,21 @@ async function saveScore() {
         const matchedPairsCount = matchedPairs.length / 2; // 매칭된 쌍의 수
         const totalPairsCount = 8; // 전체 쌍의 수
         
+        console.log('점수 저장 시도:', {
+            player_name: playerName,
+            score: moves,
+            time_seconds: elapsed,
+            moves: moves,
+            matched_pairs: matchedPairsCount,
+            total_pairs: totalPairsCount
+        });
+        
         const { data, error } = await supabaseClient
             .from('card_game_scores')
             .insert([
                 {
                     player_name: playerName,
-                    score: moves, // 시도 횟수를 점수로 사용
+                    score: moves,
                     time_seconds: elapsed,
                     moves: moves,
                     matched_pairs: matchedPairsCount,
@@ -281,13 +306,32 @@ async function saveScore() {
         if (error) {
             console.error('점수 저장 오류:', error);
             alert('점수 저장에 실패했습니다: ' + error.message);
+            saveBtn.disabled = false;
+            saveBtn.textContent = originalText;
         } else {
-            alert('점수가 저장되었습니다!');
-            document.getElementById('player-name').value = '';
+            console.log('점수 저장 성공:', data);
+            // 성공 메시지 표시
+            saveBtn.textContent = '✅ 저장 완료!';
+            saveBtn.style.background = 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)';
+            
+            // 입력 필드 초기화
+            playerNameInput.value = '';
+            
+            // 2초 후 모달 닫기 및 새 게임 시작
+            setTimeout(() => {
+                document.getElementById('game-complete-modal').classList.remove('show');
+                initGame();
+                // 버튼 상태 초기화
+                saveBtn.disabled = false;
+                saveBtn.textContent = originalText;
+                saveBtn.style.background = '';
+            }, 2000);
         }
     } catch (error) {
         console.error('점수 저장 오류:', error);
-        alert('점수 저장에 실패했습니다.');
+        alert('점수 저장에 실패했습니다: ' + (error.message || '알 수 없는 오류'));
+        saveBtn.disabled = false;
+        saveBtn.textContent = originalText;
     }
 }
 
