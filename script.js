@@ -86,8 +86,20 @@ function renderBoard() {
             </div>
         `;
         
+        // 모바일 터치 이벤트 최적화
+        cardElement.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            handleCardClick(index);
+        }, { passive: false });
+        
         cardElement.addEventListener('click', () => handleCardClick(index));
+        
         gameBoard.appendChild(cardElement);
+        
+        // 모바일에서 렌더링 강제 (GPU 가속)
+        if (cardElement.offsetParent !== null) {
+            cardElement.style.transform = 'translateZ(0)';
+        }
     });
 }
 
