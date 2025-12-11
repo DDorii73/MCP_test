@@ -50,14 +50,22 @@ CREATE POLICY "Anyone can insert scores" ON game_scores
   FOR INSERT WITH CHECK (true);
 ```
 
-### 3. Supabase 설정 파일 수정
+### 3. Supabase 설정 파일 생성
 
-`supabase-config.js` 파일을 열고 다음 값을 본인의 Supabase 프로젝트 정보로 변경하세요:
+**보안을 위해 실제 키는 버전 관리에서 제외됩니다.**
 
-```javascript
-const SUPABASE_URL = 'https://your-project.supabase.co';
-const SUPABASE_ANON_KEY = 'your-anon-key';
-```
+1. `supabase-config.example.js` 파일을 복사하여 `supabase-config.js`를 생성하세요:
+   ```bash
+   cp supabase-config.example.js supabase-config.js
+   ```
+
+2. `supabase-config.js` 파일을 열고 다음 값을 본인의 Supabase 프로젝트 정보로 변경하세요:
+   ```javascript
+   const SUPABASE_URL = 'https://your-project.supabase.co';
+   const SUPABASE_ANON_KEY = 'your-anon-key';
+   ```
+
+**중요**: `supabase-config.js` 파일은 `.gitignore`에 추가되어 있어 Git에 커밋되지 않습니다. 실제 키를 절대 공개 저장소에 업로드하지 마세요!
 
 ### 4. 게임 실행
 
@@ -103,12 +111,22 @@ npx http-server
 
 ```
 MCP_test/
-├── index.html          # 메인 HTML 파일
-├── style.css           # 스타일시트
-├── script.js           # 게임 로직
-├── supabase-config.js  # Supabase 설정
-└── README.md          # 프로젝트 설명서
+├── index.html                  # 메인 HTML 파일
+├── style.css                   # 스타일시트
+├── script.js                    # 게임 로직
+├── supabase-config.example.js   # Supabase 설정 예시 파일
+├── supabase-config.js           # Supabase 설정 (실제 키, .gitignore에 포함)
+├── .gitignore                   # Git 제외 파일 목록
+└── README.md                    # 프로젝트 설명서
 ```
+
+## 보안 주의사항
+
+⚠️ **중요**: 
+- `supabase-config.js` 파일에는 실제 Supabase 키가 포함되어 있습니다.
+- 이 파일은 `.gitignore`에 추가되어 있어 Git에 커밋되지 않습니다.
+- 실제 키를 절대 공개 저장소나 공개 채널에 공유하지 마세요.
+- 프로젝트를 클론한 후 반드시 `supabase-config.example.js`를 참고하여 `supabase-config.js`를 생성하세요.
 
 ## 라이선스
 
