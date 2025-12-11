@@ -243,10 +243,44 @@ function formatTime(seconds) {
 
 // Supabase 초기화 확인 및 재시도
 function ensureSupabaseInit() {
-    if (!supabaseClient && typeof initSupabase === 'function') {
-        initSupabase();
+    // window 객체에서 먼저 확인
+    if (typeof window !== 'undefined' && window.supabaseClient) {
+        supabaseClient = window.supabaseClient;
+        return true;
     }
-    return supabaseClient !== null;
+    
+    // 전역 supabaseClient 확인
+    if (typeof supabaseClient !== 'undefined' && supabaseClient !== null) {
+        return true;
+    }
+    
+    // initSupabase 함수 호출 시도
+    if (typeof initSupabase === 'function') {
+        const result = initSupabase();
+        if (result && (typeof window !== 'undefined' ? window.supabaseClient : supabaseClient)) {
+            return true;
+        }
+    }
+    
+    // 직접 초기화 시도 (최후의 수단)
+    if (typeof window !== 'undefined' && typeof window.supabase !== 'undefined') {
+        try {
+            // 전역 변수에서 URL과 KEY 가져오기 시도
+            const url = typeof SUPABASE_URL !== 'undefined' ? SUPABASE_URL : null;
+            const key = typeof SUPABASE_ANON_KEY !== 'undefined' ? SUPABASE_ANON_KEY : null;
+            
+            if (url && key && url !== 'YOUR_SUPABASE_URL' && key !== 'YOUR_SUPABASE_ANON_KEY') {
+                supabaseClient = window.supabase.createClient(url, key);
+                window.supabaseClient = supabaseClient;
+                console.log('✅ Supabase 클라이언트가 직접 초기화되었습니다.');
+                return true;
+            }
+        } catch (error) {
+            console.error('❌ Supabase 직접 초기화 실패:', error);
+        }
+    }
+    
+    return false;
 }
 
 // 점수 저장
@@ -269,47 +303,63 @@ async function saveScore() {
     saveBtn.textContent = '저장 중...';
     
     // Supabase 초기화 확인
+    console.log('점수 저장 시작 - Supabase 클라이언트 확인:', {
+        supabaseClient: typeof supabaseClient !== 'undefined' ? '존재' : '없음',
+        windowSupabase: typeof window !== 'undefined' && typeof window.supabase !== 'undefined' ? '존재' : '없음',
+        SUPABASE_URL: typeof SUPABASE_URL !== 'undefined' ? SUPABASE_URL : '없음'
+    });
+    
     if (!ensureSupabaseInit()) {
-        alert('Supabase가 설정되지 않았습니다. 페이지를 새로고침해주세요.');
-        console.error('Supabase 클라이언트가 초기화되지 않았습니다.');
+        console.error('Supabase 초기화 실패 - 현재 상태:', {
+            supabaseClient,
+            windowSupabaseClient: typeof window !== 'undefined' ? window.supabaseClient : '없음',
+            initSupabase: typeof initSupabase
+        });
+        alert('Supabase가 설정되지 않았습니다.\n브라우저 콘솔(F12)을 확인해주세요.');
         saveBtn.disabled = false;
         saveBtn.textContent = originalText;
         return;
     }
     
+    console.log('Supabase 클라이언트 확인됨:', supabaseClient);
+    
     try {
         const matchedPairsCount = matchedPairs.length / 2; // 매칭된 쌍의 수
         const totalPairsCount = 8; // 전체 쌍의 수
         
-        console.log('점수 저장 시도:', {
+        const scoreData = {
             player_name: playerName,
             score: moves,
             time_seconds: elapsed,
             moves: moves,
             matched_pairs: matchedPairsCount,
             total_pairs: totalPairsCount
-        });
+        };
+        
+        console.log('점수 저장 시도:', scoreData);
+        console.log('Supabase 클라이언트:', supabaseClient);
+        console.log('테이블 이름: card_game_scores');
         
         const { data, error } = await supabaseClient
             .from('card_game_scores')
-            .insert([
-                {
-                    player_name: playerName,
-                    score: moves,
-                    time_seconds: elapsed,
-                    moves: moves,
-                    matched_pairs: matchedPairsCount,
-                    total_pairs: totalPairsCount
-                }
-            ]);
+            .insert([scoreData])
+            .select();
+        
+        console.log('Supabase 응답:', { data, error });
         
         if (error) {
-            console.error('점수 저장 오류:', error);
-            alert('점수 저장에 실패했습니다: ' + error.message);
+            console.error('점수 저장 오류 상세:', {
+                error,
+                message: error.message,
+                details: error.details,
+                hint: error.hint,
+                code: error.code
+            });
+            alert('점수 저장에 실패했습니다.\n오류: ' + error.message + '\n\n브라우저 콘솔(F12)에서 자세한 정보를 확인하세요.');
             saveBtn.disabled = false;
             saveBtn.textContent = originalText;
         } else {
-            console.log('점수 저장 성공:', data);
+            console.log('✅ 점수 저장 성공:', data);
             // 성공 메시지 표시
             saveBtn.textContent = '✅ 저장 완료!';
             saveBtn.style.background = 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)';
@@ -328,8 +378,9 @@ async function saveScore() {
             }, 2000);
         }
     } catch (error) {
-        console.error('점수 저장 오류:', error);
-        alert('점수 저장에 실패했습니다: ' + (error.message || '알 수 없는 오류'));
+        console.error('점수 저장 예외 발생:', error);
+        console.error('스택 트레이스:', error.stack);
+        alert('점수 저장 중 오류가 발생했습니다.\n오류: ' + (error.message || '알 수 없는 오류') + '\n\n브라우저 콘솔(F12)에서 자세한 정보를 확인하세요.');
         saveBtn.disabled = false;
         saveBtn.textContent = originalText;
     }
